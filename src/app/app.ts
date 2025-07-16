@@ -1,16 +1,34 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { MatCard } from '@angular/material/card';
+import { Login } from './login';
 
 @Component({
   selector: 'ngx-root',
-  imports: [RouterOutlet],
+  imports: [Login, MatCard],
   template: `
-    <h1>Welcome to {{title}}!</h1>
-
-    <router-outlet />
+    <mat-card>
+      <h1>Sign In</h1>
+      <ngx-login></ngx-login>
+    </mat-card>
   `,
-  styles: [],
+  styles: [
+    `
+      :host {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        width: 100%;
+        mat-card {
+          padding: 24px;
+          width: 425px;
+          h1 {
+            font-weight: 200;
+          }
+        }
+      }
+    `,
+  ],
 })
-export class App {
-  protected title = 'ngx-auth-ui';
-}
+export class App {}

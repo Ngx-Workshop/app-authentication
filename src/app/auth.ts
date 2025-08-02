@@ -1,5 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { catchError, Observable, Subject, tap } from 'rxjs';
 
 export interface IUser {
@@ -17,17 +18,17 @@ export interface IUserMetadata {
 })
 export class Auth {
   httpClient: HttpClient = inject(HttpClient);
+  router: Router = inject(Router);
 
   signInFormErrorSubject = new Subject<number>();
   signInFormError$ = this.signInFormErrorSubject.asObservable();
 
-  userMetadata = new Subject<IUserMetadata>();
-  userMetadata$ = this.userMetadata.asObservable();
-
   signIn(user: IUser) {
     return this.httpClient.post<IUserMetadata>('/api/sign-in', user)
     .pipe(
-      tap((userMetadata) => this.userMetadata.next(userMetadata)),
+      tap(() => {
+        this.handleRedirectAfterLogin();
+      }),
       catchError((error: HttpErrorResponse) => {
         this.signInFormErrorSubject.next(error.status);
         return [];
@@ -35,9 +36,25 @@ export class Auth {
     )
   }
 
+  private handleRedirectAfterLogin(): void {
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectUrl = urlParams.get('redirect');
+    if (redirectUrl) {
+      const decodedRedirectUrl = decodeURIComponent(redirectUrl);
+      window.location.href = decodedRedirectUrl;
+    } else {
+      window.location.href = 'https://ngx-workshop.io/';
+    }
+  }
+
   isLoggedIn(): Observable<boolean> {
     return this.httpClient.get<boolean>(
       '/api/authentication/is-user-logged-in'
     );
+  }
+
+  getRedirectUrl(): string | null {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('redirect');
   }
 }

@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "ngx-auth-ui": {
+    "app-authentication": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -61,10 +61,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "ngx-auth-ui:build:production"
+              "buildTarget": "app-authentication:build:production"
             },
             "development": {
-              "buildTarget": "ngx-auth-ui:build:development"
+              "buildTarget": "app-authentication:build:development"
             }
           },
           "defaultConfiguration": "development"

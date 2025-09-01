@@ -1,4 +1,4 @@
-name: Deploy Ngx Auth UI to DO Droplet
+name: Deploy UI App Authentication to DO Droplet
 
 on:
   push:
@@ -29,8 +29,8 @@ jobs:
           host: ${{ secrets.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "dist/ngx-auth-ui/browser/*"
-          target: "/opt/ngx-auth-ui/"
+          source: "dist/app-authentication/browser/*"
+          target: "/opt/app-authentication/"
           strip_components: 2
 
       - name: SSH and restart Nginx (optional, if needed)

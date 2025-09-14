@@ -43,7 +43,7 @@ export class Auth {
       const decodedRedirectUrl = decodeURIComponent(redirectUrl);
       window.location.href = decodedRedirectUrl;
     } else {
-      window.location.href = 'https://ngx-workshop.io/';
+      window.location.href = 'https://beta.ngx-workshop.io/';
     }
   }
 

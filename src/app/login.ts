@@ -11,6 +11,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { startWith, map, mergeMap, tap, of, lastValueFrom } from 'rxjs';
 import { Auth } from './auth';
+import { RouterLink } from '@angular/router';
+import { MatDivider } from '@angular/material/divider';
 
 type LoginModel = {
   loginForm: FormGroup;
@@ -26,10 +28,15 @@ type LoginModel = {
     MatFormFieldModule,
     MatInput,
     MatButton,
+    RouterLink,
+    MatDivider
   ],
   template: `
     @if (loginModel$ | async; as vm) {
     <form [formGroup]="vm.loginForm">
+      <a routerLink="/sign-up">Don't have an account? Sign up</a>
+      <mat-divider></mat-divider>
+      <h1>Sign In</h1>
       <mat-form-field>
         <mat-label>Email</mat-label>
         <input formControlName="email" matInput />
@@ -45,6 +52,7 @@ type LoginModel = {
         }
       </mat-form-field>
       <button mat-button (click)="login(vm)">Sign In</button>
+
     </form>
     }
   `,
@@ -56,6 +64,14 @@ type LoginModel = {
           display: flex;
           flex-direction: column;
           gap: 0.5em;
+        }
+        h1 {
+          margin: 0 0 1em 0;
+          font-weight: 200;
+        }
+        a {
+          align-self: flex-end;
+          text-decoration: none;
         }
       }
     `,

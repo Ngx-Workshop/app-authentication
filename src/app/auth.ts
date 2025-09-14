@@ -23,6 +23,9 @@ export class Auth {
   signInFormErrorSubject = new Subject<number>();
   signInFormError$ = this.signInFormErrorSubject.asObservable();
 
+  signUpFormErrorSubject = new Subject<number>();
+  signUpFormError$ = this.signUpFormErrorSubject.asObservable();
+
   signIn(user: IUser) {
     return this.httpClient.post<IUserMetadata>('/api/sign-in', user)
     .pipe(
@@ -31,6 +34,19 @@ export class Auth {
       }),
       catchError((error: HttpErrorResponse) => {
         this.signInFormErrorSubject.next(error.status);
+        return [];
+      })
+    )
+  }
+
+  signUp(user: IUser) {
+    return this.httpClient.post<IUserMetadata>('/api/sign-up', user)
+    .pipe(
+      tap(() => {
+        this.handleRedirectAfterLogin();
+      }),
+      catchError((error: HttpErrorResponse) => {
+        this.signUpFormErrorSubject.next(error.status);
         return [];
       })
     )
@@ -47,14 +63,4 @@ export class Auth {
     }
   }
 
-  isLoggedIn(): Observable<boolean> {
-    return this.httpClient.get<boolean>(
-      '/api/authentication/is-user-logged-in'
-    );
-  }
-
-  getRedirectUrl(): string | null {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('redirect');
-  }
 }

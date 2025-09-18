@@ -39,7 +39,7 @@ type LoginModel = {
       <h1>Sign In</h1>
       <mat-form-field>
         <mat-label>Email</mat-label>
-        <input formControlName="email" matInput />
+        <input formControlName="email" matInput type="email"/>
         @if (vm.loginForm.get('email')?.errors) {
         <mat-error>{{ vm.formErrorMessages['email'] }}</mat-error>
         }

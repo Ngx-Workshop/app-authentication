@@ -25,6 +25,11 @@ import { NgxThemePicker } from '@tmdjr/ngx-theme-picker';
           padding: 24px;
           width: 425px;
         }
+        ngx-theme-picker {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+        }
       }
     `,
   ],

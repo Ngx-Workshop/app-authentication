@@ -7,7 +7,7 @@ import { NgxThemePicker } from '@tmdjr/ngx-theme-picker';
   selector: 'ngx-root',
   imports: [RouterOutlet, MatCard, NgxThemePicker],
   template: `
-    <ngx-theme-picker style="display: none"></ngx-theme-picker>
+    <ngx-theme-picker></ngx-theme-picker>
     <mat-card>
       <router-outlet></router-outlet>
     </mat-card>

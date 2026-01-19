@@ -1,11 +1,13 @@
 import { Component } from '@angular/core';
 import { MatCard } from '@angular/material/card';
 import { RouterOutlet } from '@angular/router';
+import { NgxThemePicker } from '@tmdjr/ngx-theme-picker';
 
 @Component({
   selector: 'ngx-root',
-  imports: [RouterOutlet, MatCard],
+  imports: [RouterOutlet, MatCard, NgxThemePicker],
   template: `
+    <ngx-theme-picker style="display: none"></ngx-theme-picker>
     <mat-card>
       <router-outlet></router-outlet>
     </mat-card>

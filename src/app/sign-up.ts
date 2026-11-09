@@ -1,3 +1,4 @@
+import { SocialLogin } from './social-login';
 import { AsyncPipe } from '@angular/common';
 import { Component, inject } from "@angular/core";
 import {
@@ -58,6 +59,7 @@ type SignUpModel = {
   selector: 'ngx-sign-up',
   imports: [
     AsyncPipe,
+    SocialLogin,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInput,
@@ -68,9 +70,10 @@ type SignUpModel = {
   template: `
     @if (signUpModel$ | async; as vm) {
     <form [formGroup]="vm.signUpForm">
-      <a routerLink="/login">Already have an account? Log in</a>
+      <a routerLink="/login" queryParamsHandling="preserve">Already have an account? Log in</a>
       <mat-divider></mat-divider>
       <h1>Create Account</h1>
+      <ngx-social-login />
       <mat-form-field>
         <mat-label>Email</mat-label>
         <input formControlName="email" matInput type="email" />

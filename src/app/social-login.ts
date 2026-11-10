@@ -26,7 +26,7 @@ export class SocialLogin {
   readonly providers$ = inject(HttpClient).get<Provider[]>('/api/auth/social/providers')
     .pipe(catchError(() => of([])));
   readonly error = new URLSearchParams(window.location.search).get('social_error') === 'link_required'
-    ? 'An account already uses this email. Sign in with your existing method. Linking providers is not available yet.'
+    ? 'This provider could not be connected to the account using this email. Sign in with your existing method.'
     : new URLSearchParams(window.location.search).has('social_error')
       ? 'Provider sign-in could not be completed. Please try again.' : '';
 

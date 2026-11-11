@@ -1,116 +1,204 @@
-/* You can add global styles to this file, and also import other style files */
-@use "@angular/material" as mat;
+@use '@tmdjr/ngx-workshop-design-system/theme' as ngx;
 
-html,
-body {
-  height: 100%;
+@include ngx.button-styles();
+
+html {
+  color-scheme: dark;
+  @include ngx.tokens();
+  @include ngx.material-adapter(dark);
 }
+
+@media (prefers-color-scheme: light) {
+  html {
+    color-scheme: light;
+    --ngx-color-canvas: #e0e7ef;
+    --ngx-color-surface: #edf2f7;
+    --ngx-color-surface-low: #e6edf4;
+    --ngx-color-surface-high: #f7f9fc;
+    --ngx-color-surface-highest: #ffffff;
+    --ngx-color-text: #172b3a;
+    --ngx-color-muted: #4d6272;
+    --ngx-color-border: #7b8a99;
+    --ngx-color-primary: #006b70;
+    --ngx-color-on-primary: #ffffff;
+    --ngx-color-secondary: #9b246d;
+    --ngx-color-on-secondary: #ffffff;
+    --ngx-color-error: #b42340;
+    --ngx-color-on-error: #ffffff;
+    --ngx-glow: none;
+    @include ngx.material-adapter(light);
+  }
+}
+
 body {
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background: var(--ngx-color-canvas);
+  color: var(--ngx-color-text);
+  font-family: var(--ngx-font-body);
+  line-height: 1.5;
 }
 
-body.light-mode {
-  color-scheme: light;
-  color: var(--mat-sys-on-surface);
-  background-color: var(--mat-sys-surface);
+.auth-shell {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: clamp(0.75rem, 4vw, 2rem);
 }
 
-body.dark-mode {
-  color-scheme: dark;
-  color: var(--mat-sys-on-surface);
-  background-color: var(--mat-sys-surface);
+.auth-shell__card {
+  width: min(100%, 28rem);
+  min-width: 0;
 }
 
-body {
-  &.red-palette {
-    @include mat.theme(
-      (
-        color: mat.$red-palette,
-      )
-    );
-  }
+.auth-form {
+  display: grid;
+  gap: var(--ngx-space-4);
+}
 
-  &.green-palette {
-    @include mat.theme(
-      (
-        color: mat.$green-palette,
-      )
-    );
-  }
+.auth-form mat-form-field {
+  width: 100%;
+}
 
-  &.blue-palette {
-    @include mat.theme(
-      (
-        color: mat.$blue-palette,
-      )
-    );
-  }
+.auth-form__switch,
+.auth-link-panel p {
+  margin: 0;
+}
 
-  &.yellow-palette {
-    @include mat.theme(
-      (
-        color: mat.$yellow-palette,
-      )
-    );
-  }
+.auth-form__switch,
+.auth-link-panel p,
+.auth-form__hint {
+  color: var(--ngx-color-muted);
+}
 
-  &.cyan-palette {
-    @include mat.theme(
-      (
-        color: mat.$cyan-palette,
-      )
-    );
-  }
+.auth-form__hint {
+  margin: 0;
+  font-size: 0.875rem;
+}
 
-  &.magenta-palette {
-    @include mat.theme(
-      (
-        color: mat.$magenta-palette,
-      )
-    );
-  }
+.auth-shell a {
+  color: var(--ngx-color-primary);
+  text-underline-offset: 0.2em;
+}
 
-  &.orange-palette {
-    @include mat.theme(
-      (
-        color: mat.$orange-palette,
-      )
-    );
-  }
-  &.chartreuse-palette {
-    @include mat.theme(
-      (
-        color: mat.$chartreuse-palette,
-      )
-    );
-  }
-  &.spring-green-palette {
-    @include mat.theme(
-      (
-        color: mat.$spring-green-palette,
-      )
-    );
-  }
-  &.azure-palette {
-    @include mat.theme(
-      (
-        color: mat.$azure-palette,
-      )
-    );
-  }
-  &.violet-palette {
-    @include mat.theme(
-      (
-        color: mat.$violet-palette,
-      )
-    );
-  }
-  &.rose-palette {
-    @include mat.theme(
-      (
-        color: mat.$rose-palette,
-      )
-    );
+.auth-shell :focus-visible {
+  outline: 2px solid var(--ngx-color-primary);
+  outline-offset: 3px;
+}
+
+/* The server-rendered confirmation shares the theme without loading Angular. */
+.auth-link-panel {
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--ngx-space-4);
+  position: relative;
+  isolation: isolate;
+  padding: clamp(1.125rem, 5vw, 1.5rem);
+  font-size: 0.875rem;
+}
+
+.auth-link-panel::before,
+.auth-link-panel::after {
+  position: absolute;
+  z-index: -1;
+  content: '';
+  clip-path: var(--ngx-frame-shape);
+  pointer-events: none;
+}
+
+.auth-link-panel::before {
+  inset: 0;
+  background: linear-gradient(
+    125deg,
+    var(--ngx-color-primary),
+    var(--ngx-color-border) 25% 75%,
+    var(--ngx-color-primary)
+  );
+}
+
+.auth-link-panel::after {
+  inset: 1px;
+  background: var(--ngx-color-surface-high);
+}
+
+.auth-link-panel .auth-link-panel__brand {
+  margin-bottom: var(--ngx-space-2);
+  color: var(--ngx-color-primary);
+  font: var(--ngx-font-label);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.auth-link-panel h1 {
+  margin: 0;
+  font: 500 1.15rem / 1.4 var(--ngx-font-heading);
+  letter-spacing: -0.03em;
+}
+
+.auth-link-panel label {
+  display: grid;
+  gap: var(--ngx-space-2);
+}
+
+.auth-link-panel input:not([type='hidden']) {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--ngx-color-border);
+  border-radius: var(--ngx-radius);
+  background: transparent;
+  color: var(--ngx-color-text);
+  font: inherit;
+}
+
+.auth-link-panel button {
+  position: relative;
+  isolation: isolate;
+  min-height: 2.5rem;
+  padding: 0.625rem 1rem;
+  border: 0;
+  background: transparent;
+  color: var(--ngx-color-on-primary);
+  font: 500 0.75rem / 1.4 var(--ngx-font-mono);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.auth-link-panel button::before {
+  --cut: var(--ngx-button-cut);
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: '';
+  background: var(--ngx-color-primary);
+  clip-path: polygon(
+    var(--cut) 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut)),
+    0 var(--cut)
+  );
+}
+
+.auth-link-panel button:hover::before {
+  background: color-mix(
+    in srgb,
+    var(--ngx-color-primary) 88%,
+    var(--ngx-color-text)
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-shell *,
+  .auth-shell *::before,
+  .auth-shell *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

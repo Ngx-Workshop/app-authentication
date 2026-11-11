@@ -1,37 +1,15 @@
 import { Component } from '@angular/core';
-import { MatCard } from '@angular/material/card';
 import { RouterOutlet } from '@angular/router';
-import { NgxThemePicker } from '@tmdjr/ngx-theme-picker';
 
 @Component({
   selector: 'ngx-root',
-  imports: [RouterOutlet, MatCard, NgxThemePicker],
+  imports: [RouterOutlet],
   template: `
-    <ngx-theme-picker></ngx-theme-picker>
-    <mat-card>
-      <router-outlet></router-outlet>
-    </mat-card>
+    <main class="auth-shell">
+      <div class="auth-shell__card">
+        <router-outlet />
+      </div>
+    </main>
   `,
-  styles: [
-    `
-      :host {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        width: 100%;
-        mat-card {
-          padding: 24px;
-          width: 425px;
-        }
-        ngx-theme-picker {
-          position: absolute;
-          top: 16px;
-          right: 16px;
-        }
-      }
-    `,
-  ],
 })
 export class App {}

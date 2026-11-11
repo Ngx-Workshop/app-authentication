@@ -29,12 +29,18 @@
               }
             ],
             "styles": [
-              "@angular/material/prebuilt-themes/azure-blue.css",
-              "src/styles.scss"
+              {
+                "input": "src/styles.scss",
+                "bundleName": "auth-theme",
+                "inject": false
+              }
             ]
           },
           "configurations": {
             "production": {
+              "optimization": {
+                "styles": { "minify": true, "inlineCritical": false }
+              },
               "budgets": [
                 {
                   "type": "initial",
@@ -59,6 +65,7 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": { "proxyConfig": "proxy.conf.cjs" },
           "configurations": {
             "production": {
               "buildTarget": "app-authentication:build:production"
@@ -83,10 +90,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "@angular/material/prebuilt-themes/azure-blue.css",
-              "src/styles.scss"
-            ]
+            "styles": ["src/styles.scss"]
           }
         }
       }

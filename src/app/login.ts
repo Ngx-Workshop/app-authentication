@@ -1,131 +1,125 @@
-import { SocialLogin } from './social-login';
-import { AsyncPipe } from '@angular/common';
-import { Component, inject } from '@angular/core';
 import {
-  ReactiveFormsModule,
-  FormBuilder,
-  Validators,
-  FormGroup,
-} from '@angular/forms';
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButton } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
-import { startWith, map, mergeMap, tap, of, lastValueFrom } from 'rxjs';
-import { Auth } from './auth';
 import { RouterLink } from '@angular/router';
-import { MatDivider } from '@angular/material/divider';
-
-type LoginModel = {
-  loginForm: FormGroup;
-  formErrorMessages: { [key: string]: string };
-  errorMessages: { [key: string]: string };
-};
+import {
+  NgxButton,
+  NgxInlineStatus,
+  NgxPanel,
+} from '@tmdjr/ngx-workshop-design-system';
+import { finalize } from 'rxjs';
+import { Auth } from './auth';
+import { SocialLogin } from './social-login';
 
 @Component({
   selector: 'ngx-login',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    AsyncPipe,
-    SocialLogin,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInput,
     MatButton,
     RouterLink,
-    MatDivider
+    NgxButton,
+    NgxInlineStatus,
+    NgxPanel,
+    SocialLogin,
   ],
   template: `
-    @if (loginModel$ | async; as vm) {
-    <form [formGroup]="vm.loginForm">
-      <a routerLink="/sign-up" queryParamsHandling="preserve">Don't have an account? Sign up</a>
-      <mat-divider></mat-divider>
-      <h1>Sign In</h1>
-      <ngx-social-login />
-      <mat-form-field>
-        <mat-label>Email</mat-label>
-        <input formControlName="email" matInput type="email"/>
-        @if (vm.loginForm.get('email')?.errors) {
-        <mat-error>{{ vm.formErrorMessages['email'] }}</mat-error>
+    <ngx-panel
+      role="region"
+      aria-label="Sign in"
+      heading="Sign in"
+      eyebrow="NGX Workshop"
+      background="solid"
+      motion="none"
+    >
+      <form class="auth-form" [formGroup]="form" (ngSubmit)="signIn()">
+        <ngx-social-login />
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Email</mat-label>
+          <input
+            matInput
+            formControlName="email"
+            type="email"
+            autocomplete="username"
+          />
+          <mat-error>{{
+            form.controls.email.hasError('required')
+              ? 'Enter your email.'
+              : 'Enter a valid email.'
+          }}</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            formControlName="password"
+            type="password"
+            autocomplete="current-password"
+          />
+          <mat-error>Enter your password.</mat-error>
+        </mat-form-field>
+        @if (error() && !pending()) {
+          <ngx-inline-status
+            tone="error"
+            [announce]="true"
+            [label]="
+              error() === 401
+                ? 'Check your email and password.'
+                : 'Could not sign in. Please try again.'
+            "
+          />
         }
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Password</mat-label>
-        <input formControlName="password" matInput type="password"/>
-        @if (vm.loginForm.get('password')?.errors) {
-        <mat-error>{{ vm.formErrorMessages['password'] }}</mat-error>
-        }
-      </mat-form-field>
-      <button mat-button (click)="login(vm)">Sign In</button>
-
-    </form>
-    }
+        <button
+          mat-flat-button
+          ngxButton
+          shape="chamfered"
+          motion="none"
+          type="submit"
+          [disabled]="pending()"
+        >
+          {{ pending() ? 'Signing in…' : 'Sign in' }}
+        </button>
+        <p class="auth-form__switch">
+          New to NGX Workshop?
+          <a routerLink="/sign-up" queryParamsHandling="preserve"
+            >Create an account</a
+          >
+        </p>
+      </form>
+    </ngx-panel>
   `,
-  styles: [
-    `
-      :host {
-        width: 100%;
-        form {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5em;
-        }
-        h1 {
-          margin: 0 0 1em 0;
-          font-weight: 200;
-        }
-        a {
-          align-self: flex-end;
-          text-decoration: none;
-        }
-      }
-    `,
-  ],
 })
 export class Login {
-  formBuilder = inject(FormBuilder);
-  auth = inject(Auth);
+  private readonly auth = inject(Auth);
+  protected readonly form = inject(FormBuilder).nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', Validators.required],
+  });
+  protected readonly error = toSignal(this.auth.signInFormError$, {
+    initialValue: 0,
+  });
+  protected readonly pending = signal(false);
 
-  loginModel$ = of({
-    loginForm: this.formBuilder.nonNullable.group({
-      email: ['', Validators.required],
-      password: ['', Validators.required],
-    }),
-    errorMessages: {
-      required: 'Required',
-    },
-    formErrorMessages: {
-      email: '',
-      password: '',
-    },
-  }).pipe(
-    mergeMap((loginModel: LoginModel) =>
-      this.watchStatusChanges(loginModel).pipe(
-        startWith(null),
-        map(() => loginModel)
-      )
-    )
-  );
-
-  watchStatusChanges(loginModel: LoginModel) {
-    return loginModel.loginForm.events.pipe(
-      tap(() => this.setErrorsMessages(loginModel))
-    );
-  }
-
-  setErrorsMessages({
-    loginForm,
-    formErrorMessages,
-    errorMessages,
-  }: LoginModel): void {
-    Object.keys(loginForm.controls).forEach((element) => {
-      const errors = loginForm.get(element)?.errors;
-      if (errors) {
-        const error = Object.keys(errors)[0];
-        formErrorMessages[element] = errorMessages[error];
-      }
-    });
-  }
-
-  login(loginModel: LoginModel): void {
-    lastValueFrom(this.auth.signIn(loginModel.loginForm.getRawValue()));
+  protected signIn() {
+    if (this.pending()) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    this.pending.set(true);
+    this.auth
+      .signIn(this.form.getRawValue())
+      .pipe(finalize(() => this.pending.set(false)))
+      .subscribe();
   }
 }

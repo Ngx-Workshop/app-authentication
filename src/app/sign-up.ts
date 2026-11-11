@@ -1,191 +1,171 @@
-import { SocialLogin } from './social-login';
-import { AsyncPipe } from '@angular/common';
-import { Component, inject } from "@angular/core";
 import {
-  ReactiveFormsModule,
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import {
   FormBuilder,
+  ReactiveFormsModule,
+  ValidatorFn,
   Validators,
-  FormGroup,
-  AbstractControl,
-  ValidationErrors,
-  ValidatorFn
 } from '@angular/forms';
 import { MatButton } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
-import { startWith, map, mergeMap, tap, of, lastValueFrom } from 'rxjs';
-import { Auth } from './auth';
 import { RouterLink } from '@angular/router';
-import { MatDivider } from '@angular/material/divider';
+import {
+  NgxButton,
+  NgxInlineStatus,
+  NgxPanel,
+} from '@tmdjr/ngx-workshop-design-system';
+import { finalize } from 'rxjs';
+import { Auth } from './auth';
+import { SocialLogin } from './social-login';
 
-export function PasswordValidator(): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    return control.value.match(/^(?=.*[0-9])[a-zA-Z0-9!@#$%^&*]{6,100}$/) ? null : { invalidPassword: true };
-  };
-}
-
-export function MatchPasswordValidator(controlName: string, toMatchControlName: string): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    const controlOne: AbstractControl|null = control.get(controlName);
-    const controlTwo: AbstractControl|null = control.get(toMatchControlName);
-    const error: boolean = (controlOne && controlTwo && controlOne?.value !== controlTwo?.value) ?? false;
-    let validatorFn = null
-    // Keep errors if the control has other validators
-    if(error) {
-      validatorFn = {
-        matchPassword: {
-          value: {
-            controlOne: controlOne?.value,
-            controlTwo: controlTwo?.value
-          }
-        }
-      };
-    } else if(controlOne?.errors) {
-      validatorFn = controlOne?.errors;
-    }
-
-    controlOne?.setErrors(validatorFn);
-    return  error ? validatorFn : null;
-  };
-}
-
-type SignUpModel = {
-  signUpForm: FormGroup;
-  formErrorMessages: { [key: string]: string };
-  errorMessages: { [key: string]: string };
-};
+const passwordPattern = /^(?=.*[0-9])[a-zA-Z0-9!@#$%^&*]{6,100}$/;
+const matchPasswords: ValidatorFn = (form) =>
+  form.get('password')?.value === form.get('confirmPassword')?.value
+    ? null
+    : { passwordMismatch: true };
 
 @Component({
   selector: 'ngx-sign-up',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    AsyncPipe,
-    SocialLogin,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInput,
     MatButton,
     RouterLink,
-    MatDivider
+    NgxButton,
+    NgxInlineStatus,
+    NgxPanel,
+    SocialLogin,
   ],
   template: `
-    @if (signUpModel$ | async; as vm) {
-    <form [formGroup]="vm.signUpForm">
-      <a routerLink="/login" queryParamsHandling="preserve">Already have an account? Log in</a>
-      <mat-divider></mat-divider>
-      <h1>Create Account</h1>
-      <ngx-social-login />
-      <mat-form-field>
-        <mat-label>Email</mat-label>
-        <input formControlName="email" matInput type="email" />
-        @if (vm.signUpForm.get('email')?.errors) {
-        <mat-error>{{ vm.formErrorMessages['email'] }}</mat-error>
+    <ngx-panel
+      role="region"
+      aria-label="Create an account"
+      heading="Create an account"
+      eyebrow="NGX Workshop"
+      background="solid"
+      motion="none"
+    >
+      <form class="auth-form" [formGroup]="form" (ngSubmit)="signUp()">
+        <ngx-social-login />
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Email</mat-label>
+          <input
+            matInput
+            formControlName="email"
+            type="email"
+            autocomplete="username"
+          />
+          <mat-error>{{
+            form.controls.email.hasError('required')
+              ? 'Enter your email.'
+              : 'Enter a valid email.'
+          }}</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            formControlName="password"
+            type="password"
+            autocomplete="new-password"
+          />
+          <mat-error>{{
+            form.controls.password.hasError('required')
+              ? 'Enter a password.'
+              : 'Password does not meet the requirements.'
+          }}</mat-error>
+        </mat-form-field>
+        <p class="auth-form__hint">
+          Use 6–100 letters, numbers or !&#64;#$%^&amp;*, including at least one
+          number.
+        </p>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Confirm password</mat-label>
+          <input
+            matInput
+            formControlName="confirmPassword"
+            type="password"
+            autocomplete="new-password"
+          />
+          <mat-error>Enter your password again.</mat-error>
+        </mat-form-field>
+        @if (
+          form.hasError('passwordMismatch') &&
+          form.controls.confirmPassword.touched &&
+          form.controls.confirmPassword.valid
+        ) {
+          <ngx-inline-status
+            tone="error"
+            [announce]="true"
+            label="Passwords do not match."
+          />
         }
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Password</mat-label>
-        <input formControlName="password" matInput type="password" />
-        @if (vm.signUpForm.get('password')?.errors) {
-        <mat-error>{{ vm.formErrorMessages['password'] }}</mat-error>
+        @if (error() && !pending()) {
+          <ngx-inline-status
+            tone="error"
+            [announce]="true"
+            [label]="
+              error() === 409
+                ? 'An account already uses this email.'
+                : 'Could not create your account. Please try again.'
+            "
+          />
         }
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Confirm Password</mat-label>
-        <input formControlName="confirmPassword" matInput type="password" />
-        @if (vm.signUpForm.get('confirmPassword')?.errors) {
-        <mat-error>{{ vm.formErrorMessages['confirmPassword'] }}</mat-error>
-        }
-      </mat-form-field>
-      <button
-        mat-raised-button
-        (click)="signUp(vm)"
-        [disabled]="vm.signUpForm.invalid"
-      >
-        Create Account
-      </button>
-    </form>
-    }
+        <button
+          mat-flat-button
+          ngxButton
+          shape="chamfered"
+          motion="none"
+          type="submit"
+          [disabled]="pending()"
+        >
+          {{ pending() ? 'Creating account…' : 'Create account' }}
+        </button>
+        <p class="auth-form__switch">
+          Already have an account?
+          <a routerLink="/login" queryParamsHandling="preserve">Sign in</a>
+        </p>
+      </form>
+    </ngx-panel>
   `,
-  styles: [
-    `
-      :host {
-        width: 100%;
-        form {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5em;
-        }
-        h1 {
-          margin: 0 0 1em 0;
-          font-weight: 200;
-        }
-        a {
-          align-self: flex-end;
-          text-decoration: none;
-        }
-      }
-    `
-  ]
 })
 export class SignUp {
-  formBuilder = inject(FormBuilder);
-  auth = inject(Auth);
-
-  signUpModel$ = of({
-    signUpForm: this.formBuilder.nonNullable.group({
+  private readonly auth = inject(Auth);
+  protected readonly form = inject(FormBuilder).nonNullable.group(
+    {
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, PasswordValidator()]],
+      password: [
+        '',
+        [Validators.required, Validators.pattern(passwordPattern)],
+      ],
       confirmPassword: ['', Validators.required],
-    }, { validators: MatchPasswordValidator('confirmPassword', 'password') }),
-    errorMessages: {
-      required: 'Required',
-      email: 'Invalid email',
-      invalidPassword: 'Password too weak',
-      matchPassword: 'Passwords do not match',
     },
-    formErrorMessages: {
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
-  }).pipe(
-    mergeMap((signUpModel: SignUpModel) =>
-      this.watchStatusChanges(signUpModel).pipe(
-        startWith(null),
-        map(() => signUpModel)
-      )
-    )
+    { validators: matchPasswords },
   );
+  protected readonly error = toSignal(this.auth.signUpFormError$, {
+    initialValue: 0,
+  });
+  protected readonly pending = signal(false);
 
-  watchStatusChanges(signUpModel: SignUpModel) {
-    return signUpModel.signUpForm.events.pipe(
-      tap(() => this.setErrorsMessages(signUpModel))
-    );
-  }
-
-  setErrorsMessages({
-    signUpForm,
-    formErrorMessages,
-    errorMessages,
-  }: SignUpModel): void {
-    Object.keys(signUpForm.controls).forEach((element) => {
-      const errors = signUpForm.get(element)?.errors;
-      if (errors) {
-        const error = Object.keys(errors)[0];
-        formErrorMessages[element] = errorMessages[error];
-      } else {
-        formErrorMessages[element] = '';
-      }
-    });
-  }
-
-  signUp(signUpModel: SignUpModel): void {
-    if (signUpModel.signUpForm.valid) {
-      const formValue = signUpModel.signUpForm.getRawValue();
-      const userAuthDto = {
-        email: formValue.email,
-        password: formValue.password
-      };
-      lastValueFrom(this.auth.signUp(userAuthDto));
+  protected signUp() {
+    if (this.pending()) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
     }
+    const { email, password } = this.form.getRawValue();
+    this.pending.set(true);
+    this.auth
+      .signUp({ email, password })
+      .pipe(finalize(() => this.pending.set(false)))
+      .subscribe();
   }
 }
